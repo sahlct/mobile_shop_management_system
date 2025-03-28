@@ -1,16 +1,20 @@
 const express = require('express');
 require("dotenv").config();
-const { neon } = require("@neondatabase/serverless");
+const { Pool } = require('@neondatabase/serverless');
 
 const app = express();
 app.use(express.json());
 
-const sql = neon(process.env.DATABASE_URL);
+// Use environment variable for the database connection string
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 app.get('/', async (req, res) => {
   try {
-    const result = await sql`SELECT version()`;
-    const { version } = result[0];
+    // Execute a sample query
+    const { rows } = await pool.query('SELECT version()');
+    const version = rows[0].version;
     res.status(200).send(`PostgreSQL Version: ${version}`);
   } catch (error) {
     console.error(error);
