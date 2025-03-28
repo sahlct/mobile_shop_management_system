@@ -8,3 +8,5 @@ app.use('/categories', require('./routes/categoryRoutes'))
 app.use('/products', require('./routes/productsRoutes'))
 
 app.listen(port, ()=>console.log(`Server Started on Port ${port}`))
+
+module.exports = app;
