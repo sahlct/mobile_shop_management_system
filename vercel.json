@@ -4,7 +4,12 @@
       {
         "src": "index.js",
         "use": "@vercel/node",
-        "config": { "includeFiles": ["./**"] }
+        "config": {
+          "includeFiles": ["prisma/schema.prisma"],
+          "scripts": {
+            "build": "prisma generate && npm install"
+          }
+        }
       }
     ],
     "routes": [
