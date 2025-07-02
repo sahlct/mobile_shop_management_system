@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -14,81 +8,168 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Brand {
+  Samsung
+  Apple
+  Vivo
+  Oppo
+  Xiaomi
+  Realme
+  OnePlus
+  Others
+}
+
+enum ItemStatus {
+  UPCOMING
+  IN_STOCK
+  SOLD
+}
+
+enum AccessoryType {
+  CHARGER
+  EARPHONES
+  CASE
+  SCREEN_PROTECTOR
+  POWER_BANK
+  OTHERS
+}
+
+enum ServiceType {
+  SCREEN_REPAIR
+  BATTERY_REPLACEMENT
+  SOFTWARE_UPDATE
+  WATER_DAMAGE
+  OTHERS
+}
+
+model s01_sale {
+  s01_id          Int            @id @default(autoincrement())
+  s01_discount    Decimal        @db.Decimal(10, 2)
+  s01_total       Decimal        @db.Decimal(10, 2)
+  s01_m01_user_id Int // Relation to m01_user
+  s01_user        m01_user       @relation("userSales", fields: [s01_m01_user_id], references: [m01_id])
+  s02_saleline    s02_saleline[] @relation("saleLines")
+
+  @@map("s01_sale")
+}
+
+model s02_saleline {
+  s02_id               Int         @id @default(autoincrement())
+  s02_discount         Decimal     @db.Decimal(10, 2)
+  s02_total            Decimal     @db.Decimal(10, 2)
+  s02_s01_sale_id      Int // Relation to s01_sale
+  s02_m02_mobile_id    Int // Relation to m02_Mobiles
+  s02_m03_accessory_id Int // Relation to m03_accessories
+  s02_m04_service_id   Int // Relation to m04_service
+  s02_mobile           m02_Mobiles @relation("mobileLines", fields: [s02_m02_mobile_id], references: [m02_id])
+  s02_sale             s01_sale    @relation("saleLines", fields: [s02_s01_sale_id], references: [s01_id])
+  s02_accessory        m03_accessories @relation("accessoryLines", fields: [s02_m03_accessory_id], references: [m03_id])    
+  s02_service          m04_service @relation("serviceLines", fields: [s02_m04_service_id], references: [m04_id])
+
+  @@map("s02_saleline")
+}
+
 model m01_user {
-  m01_id             Int      @id @default(autoincrement())
-  m01_name           String   @db.VarChar(100)
-  m01_contact_number Int      @db.Integer
-  m01_email          String   @db.VarChar(60)
-  m01_place          String   @db.VarChar(100)
-  m01_profile_photo  String   @db.Text
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  m01_id             Int               @id @default(autoincrement())
+  m01_name           String            @db.VarChar(100)
+  m01_contact_number BigInt            @db.BigInt
+  m01_email          String            @db.VarChar(60)
+  m01_place          String            @db.VarChar(100)
+  m01_profile_photo  String?           @db.VarChar(1024)
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  mobiles            m02_Mobiles[]     @relation("userMobiles")
+  accessories        m03_accessories[] @relation("userAccessories")
+  services           m04_service[]     @relation("userServices")
+  bills              m05_bill[]        @relation("userBills")
+  s01_sale           s01_sale[]        @relation("userSales")
 
   @@map("m01_user")
 }
 
 model m02_Mobiles {
-  m02_id             Int      @id @default(autoincrement())
-  m02_model_name     String   @db.VarChar(60)
-  m02_brand          String
-  m02_imei           String   @db.VarChar(60)
-  m02_country        String   @db.VarChar(60)
-  m02_color          String   @db.VarChar(60)
-  m02_varient        String   @db.VarChar(60)
-  m02_battery        String   @db.VarChar(60)
-  m02_purchase_price Decimal  @db.Decimal(10, 2)
-  m02_selling_price  Decimal  @db.Decimal(10, 2)
-  m02_notes          String?  @db.Text
-  m02_status         String
-  m02_m01_user_id    Int
-  m02_care_warrenty  String   @db.VarChar(60)
-  m02_purchase_date  DateTime
-  m02_selling_date   DateTime
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  m02_id             Int            @id @default(autoincrement())
+  m02_model_name     String         @db.VarChar(60)
+  m02_brand          Brand // Changed to enum Brand
+  m02_imei           String?        @db.VarChar(60)
+  m02_country        String?        @db.VarChar(60)
+  m02_color          String?        @db.VarChar(60)
+  m02_varient        String?        @db.VarChar(60)
+  m02_battery        String?        @db.VarChar(60)
+  m02_purchase_price Decimal        @db.Decimal(10, 2)
+  m02_selling_price  Decimal?       @db.Decimal(10, 2)
+  m02_photos         String?        @db.VarChar(1024)
+  m02_notes          String?        @db.Text
+  m02_status         ItemStatus // Changed to enum ItemStatus
+  m02_m01_user_id    Int? // Relation to m01_user
+  m02_user           m01_user?      @relation("userMobiles", fields: [m02_m01_user_id], references: [m01_id])
+  m02_care_warrenty  String         @db.VarChar(60)
+  m02_purchase_date  DateTime?
+  m02_selling_date   DateTime?
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  bills              m05_bill[]     @relation("mobileBills")
+  s02_saleline       s02_saleline[] @relation("mobileLines")
 
   @@map("m02_Mobiles")
 }
 
 model m03_accessories {
-  m03_id             Int      @id @default(autoincrement())
-  m03_name           String   @db.VarChar(120)
-  m03_brand          String   @db.VarChar(120)
-  m03_type           String   @db.VarChar(120)
-  m03_purchase_price Decimal  @db.Decimal(10, 2)
-  m03_selling_price  Decimal  @db.Decimal(10, 2)
-  m03_description    String?  @db.Text
-  m03_status         String
-  m03_m01_user_id    Int
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  m03_id             Int           @id @default(autoincrement())
+  m03_name           String        @db.VarChar(120)
+  m03_brand          String?       @db.VarChar(120)
+  m03_type           AccessoryType // Changed to enum AccessoryType
+  m03_purchase_price Decimal?      @db.Decimal(10, 2)
+  m03_selling_price  Decimal?      @db.Decimal(10, 2)
+  m03_description    String?       @db.Text
+  m03_stock_count    Int?          @db.Integer
+  m03_sold_count     Int?          @db.Integer
+  m03_status         ItemStatus // Changed to enum ItemStatus
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  bills              m05_bill[]    @relation("accessoryBills")
+  s02_saleline s02_saleline[] @relation("accessoryLines")
+  m01_user m01_user[] @relation("userAccessories")
 
   @@map("m03_accessories")
 }
 
 model m04_service {
-  m04_id             Int      @id @default(autoincrement())
-  m04_model          String   @db.VarChar(60)
-  m04_imei           String   @db.VarChar(60)
-  m04_service_type   String   @db.VarChar(60)
-  m04_service_cost   String   @db.VarChar(60)
-  m04_service_charge String   @db.VarChar(60)
-  m04_status         String
+  m04_id             Int         @id @default(autoincrement())
+  m04_model          String      @db.VarChar(60)
+  m04_imei           String      @db.VarChar(60)
+  m04_service_type   ServiceType
+  m04_service_cost   String      @db.VarChar(60)
+  m04_service_charge String      @db.VarChar(60)
+  m04_completed      Boolean     @default(false)
   m04_date           DateTime
-  m04_warrenty       String   @db.VarBit(60)
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  m04_warrenty       String      @db.VarChar(60)
+  m04_m01_user_id    Int?        // Nullable
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+  m04_user           m01_user?   @relation("userServices", fields: [m04_m01_user_id], references: [m01_id], onDelete: SetNull)
+  bills              m05_bill[]  @relation("serviceBills")
+  s02_saleline       s02_saleline[] @relation("serviceLines")
 
   @@map("m04_service")
 }
 
 model m05_bill {
-  m05_id          Int      @id @default(autoincrement())
-  m05_date        DateTime
-  m05_amount      Decimal  @db.Decimal(10, 2)
-  m05_total       Decimal  @db.Decimal(10, 2)
-  m05_status      String   @db.VarChar(60)
-  m05_m01_user_id Int      @db.Integer
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  m05_id               Int              @id @default(autoincrement())
+  m05_date             DateTime
+  m05_amount           Decimal          @db.Decimal(10, 2)
+  m05_total            Decimal          @db.Decimal(10, 2)
+  m05_status           String           @db.VarChar(60)
+  m05_m01_user_id      Int // Relation to m01_user
+  m05_user             m01_user         @relation("userBills", fields: [m05_m01_user_id], references: [m01_id])
+  m05_m02_mobile_id    Int? // Optional relation to m02_Mobiles
+  m05_mobile           m02_Mobiles?     @relation("mobileBills", fields: [m05_m02_mobile_id], references: [m02_id])
+  m05_m03_accessory_id Int? // Optional relation to m03_accessories
+  m05_accessory        m03_accessories? @relation("accessoryBills", fields: [m05_m03_accessory_id], references: [m03_id])
+  m05_m04_service_id   Int? // Optional relation to m04_service
+  m05_service          m04_service?     @relation("serviceBills", fields: [m05_m04_service_id], references: [m04_id])
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+
+  @@map("m05_bill")
 }

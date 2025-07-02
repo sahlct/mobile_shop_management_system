@@ -1,11 +1,13 @@
 const express = require('express')
 
-const port = 3000
+const port = 5000;
 const app = express()
 app.use(express.json())
 
-app.use('/categories', require('./routes/categoryRoutes', AuthenticatorAssertionResponse,))
-app.use('/products', require('./routes/productsRoutes'))
+app.use('/users', require('./routes/userRoutes'))
+app.use('/mobiles', require('./routes/mobilesRoutes'))
+app.use('/accessories', require('./routes/accessoriesRoutes'))
+app.use('/services', require('./routes/serviceRoutes'))
 
 app.listen(port, ()=>console.log(`Server Started on Port ${port}`))
 
